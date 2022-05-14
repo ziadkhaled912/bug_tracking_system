@@ -1,19 +1,31 @@
 <?php
 
-require_once '../../model/UserModel.php';
-require_once 'C:\xampp\htdocs\bug_tracking_system\modules\auth\controller\DatabaseConnection.php';
+require_once '../model/UserModel.php';
+require_once '../../../shared/Controllers/database_controller.php';
 
 class AuthController
-{  //1.open connection
-    //2.run query
-    //3.close connection
-
+{ 
     protected $db;
+
+    public function getUserRole()
+    {
+         $this->db=new DatabaseController;
+         if($this->db->connection())
+         {
+            $query="SELECT * FROM `user_role`";
+            return $this->db->select($query);
+         }
+         else
+         {
+            echo "Error in Database Connection";
+            return false; 
+         }
+    }
 
     public function login(UserModel $user)
     {
-        $this->db = new DBController();
-        if ($this->db->connect()) {
+        $this->db = new DatabaseController();
+        if ($this->db->connection()) {
             $query = "SELECT * FROM users WHERE email='$user->email' and password='$user->password'";
             $result = $this->db->select($query);
             if ($result === false) {
@@ -21,22 +33,36 @@ class AuthController
 
                 return false;
             } else {
+                session_start();
                 if (count($result) == 0) {
-                    session_start();
                     $_SESSION['errMsg'] = 'you have entered wrong email or password';
                     $this->db->closeConnection();
 
                     return false;
                 } else {
-                    $_SESSION['id'] = $result[0]['id'];
-                    $_SESSION['FullName'] = $result[0]['FullName'];
-                    if ($result[0]['role'] == 1) {
-                        $_SESSION['role'] = 'admin';
-                    } else {
-                        $_SESSION['role'] = 'user';
+                    $_SESSION["user_id"]=$result[0]["id"];
+                    $_SESSION["fullName"]=$result[0]["fullName"];
+                    if($result[0]["role_id"]==1)
+                    {
+                        $_SESSION["role"]="Admin";
                     }
-                    $_SESSION['true'] = 'logged succesfully';
-                    echo '<br>';
+                    else if ($result[0]["role_id"]==2)
+                    {
+                        $_SESSION["role"]="user";
+                    } else {
+                        $_SESSION["role"]="staff";
+                    }
+                    // $_SESSION['id'] = $result[0]['id'];
+                    // $_SESSION['FullName'] = $result[0]['FullName'];
+                    // if ($result[0]['role_id'] == 1) {
+                    //     $_SESSION['role_id'] = 'admin';
+                    // } else if ($result[0]['role_id'] == 2) {
+                    //     $_SESSION['role_id'] = 'user';
+                    // } else {
+                    //     $_SESSION['role_id'] = 'staff';
+                    // }
+                    // $_SESSION['true'] = 'logged succesfully';
+                    // echo '<br>';
                     $this->db->closeConnection();
 
                     return true;
@@ -51,13 +77,13 @@ class AuthController
 
     public function register(UserModel $user)
     {
-        $this->db = new DBController();
-        if ($this->db->connect()) {
-            $query = "INSERT into users VALUES('','$user->fullName','$user->email','$user->password','$user->confirmPassword','$user->contactNumber','$user->role')";
+        $this->db = new DatabaseController();
+        if ($this->db->connection()) {
+            $query = "INSERT into users VALUES('','$user->fullName','$user->email','$user->password','$user->confirmPassword','$user->contactNumber',2)";
             $result = $this->db->insert($query);
             session_start();
-            if ($result != false) {
-                $_SESSION['user id'] = $result;
+            if ($result) {
+                $_SESSION['user_id'] = $result;
                 $_SESSION['FullName'] = $user->fullName;
                 $_SESSION['role'] = 'user';
                 $this->db->closeConnection();

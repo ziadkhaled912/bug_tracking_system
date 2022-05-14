@@ -5,7 +5,7 @@ class UserModel {
     public $confirmPassword;
     public $email;
     public $contactNumber;
-    public $role;
+    public $role_id;
     public $id;
 }
 ?>
